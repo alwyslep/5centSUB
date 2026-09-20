@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Sequence
 
 from .budget import BudgetLedger
+from .estimation import RateCard, UsageEstimate, estimate_cost
+from .media import build_audio_extraction_command, prepare_audio
 from .pipeline import SubtitlePipeline
 from .providers import MockTranscriptProvider, MockTranslationProvider
 from .srt import parse_srt
@@ -40,6 +42,24 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = subcommands.add_parser("validate-srt", help="validate an SRT file")
     validate.add_argument("path", type=Path)
+
+    estimate = subcommands.add_parser("estimate", help="estimate a cloud job from measured usage")
+    estimate.add_argument("--source-seconds", type=Decimal, required=True)
+    estimate.add_argument("--speech-seconds", type=Decimal, required=True)
+    estimate.add_argument("--audio-tokens-per-second", type=Decimal, required=True)
+    estimate.add_argument("--asr-input-usd-per-million", type=Decimal, required=True)
+    estimate.add_argument("--asr-output-tokens", type=Decimal, required=True)
+    estimate.add_argument("--asr-output-usd-per-million", type=Decimal, required=True)
+    estimate.add_argument("--translation-input-tokens", type=Decimal, required=True)
+    estimate.add_argument("--translation-input-usd-per-million", type=Decimal, required=True)
+    estimate.add_argument("--translation-output-tokens", type=Decimal, required=True)
+    estimate.add_argument("--translation-output-usd-per-million", type=Decimal, required=True)
+    estimate.add_argument("--budget-usd", type=Decimal, default=Decimal("0.05"))
+
+    prepare = subcommands.add_parser("prepare-audio", help="extract 16 kHz mono FLAC with FFmpeg")
+    prepare.add_argument("input_media", type=Path)
+    prepare.add_argument("output_audio", type=Path)
+    prepare.add_argument("--dry-run", action="store_true")
     return parser
 
 
@@ -48,6 +68,49 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "validate-srt":
         cues = parse_srt(args.path.read_text(encoding="utf-8-sig"))
         print(json.dumps({"valid": True, "cues": len(cues)}, ensure_ascii=False))
+        return 0
+    if args.command == "estimate":
+        usage = UsageEstimate(
+            args.source_seconds,
+            args.speech_seconds,
+            args.audio_tokens_per_second,
+            args.asr_output_tokens,
+            args.translation_input_tokens,
+            args.translation_output_tokens,
+        )
+        rates = RateCard(
+            args.asr_input_usd_per_million,
+            args.asr_output_usd_per_million,
+            args.translation_input_usd_per_million,
+            args.translation_output_usd_per_million,
+        )
+        estimate = estimate_cost(usage, rates)
+        budget = BudgetLedger(args.budget_usd)
+        print(
+            json.dumps(
+                {
+                    "source_seconds": str(usage.source_seconds),
+                    "speech_seconds": str(usage.speech_seconds),
+                    "speech_ratio": str(usage.speech_ratio.quantize(Decimal("0.000001"))),
+                    "asr_input_tokens": str(usage.asr_input_tokens),
+                    "costs_usd": {
+                        "asr_input": str(estimate.asr_input_usd),
+                        "asr_output": str(estimate.asr_output_usd),
+                        "translation_input": str(estimate.translation_input_usd),
+                        "translation_output": str(estimate.translation_output_usd),
+                        "total": str(estimate.total_usd),
+                    },
+                    "within_budget": estimate.total_usd <= budget.limit_usd,
+                }
+            )
+        )
+        return 0 if estimate.total_usd <= budget.limit_usd else 1
+    if args.command == "prepare-audio":
+        command = build_audio_extraction_command(args.input_media, args.output_audio)
+        if args.dry_run:
+            print(json.dumps({"command": command}))
+            return 0
+        prepare_audio(args.input_media, args.output_audio)
         return 0
 
     pipeline = SubtitlePipeline(

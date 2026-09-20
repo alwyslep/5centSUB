@@ -10,6 +10,7 @@ cost guard, pipeline stages, and SRT output without credentials or HTTP calls.
 ```powershell
 python -m pytest
 python -m fivecentsub demo
+python -m fivecentsub prepare-audio input.mp4 output.flac --dry-run
 ```
 
 The first cloud-backed deliverable will be a small, repeatable end-to-end proof
@@ -25,3 +26,7 @@ See [the project foundation plan](docs/PROJECT_FOUNDATION.ko.md) for the
 delivery order, reuse policy, and open decisions.
 The current provider comparison is in
 [the provider research note](docs/PROVIDER_RESEARCH.ko.md).
+
+The `estimate` command takes measured duration and token values with current
+provider rates. It returns an itemized estimate and whether it fits the
+per-job budget; it does not make provider calls.

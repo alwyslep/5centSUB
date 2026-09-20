@@ -7,6 +7,8 @@ python -m pytest
 python -m pytest tests/test_pipeline.py::test_mock_pipeline_produces_valid_korean_srt
 python -m fivecentsub demo
 python -m fivecentsub validate-srt path\to\subtitle.srt
+python -m fivecentsub estimate --source-seconds 14400 --speech-seconds 7200 --audio-tokens-per-second 25 --asr-input-usd-per-million 0.15 --asr-output-tokens 42000 --asr-output-usd-per-million 1.25 --translation-input-tokens 42000 --translation-input-usd-per-million 0.15 --translation-output-tokens 42000 --translation-output-usd-per-million 1.25
+python -m fivecentsub prepare-audio input.mp4 output.flac --dry-run
 ```
 
 `demo` is intentionally offline: it uses deterministic mock providers and must
@@ -18,6 +20,8 @@ not require credentials or make HTTP requests.
 - Providers implement small protocol interfaces. Concrete cloud clients will be added behind those interfaces; tests use `MockTranscriptProvider` and `MockTranslationProvider`.
 - All provider estimates must be authorized by `BudgetLedger` before a request begins. Actual charges are recorded separately; a charge over the budget changes the job to `FAILED`.
 - `fivecentsub.srt` is the single strict SRT parser. It rejects malformed timestamps, empty cue text, non-sequential cue numbers, non-positive durations, and overlaps.
+- `fivecentsub.estimation` accepts measured durations, tokens, and current provider rates; it must not embed time-sensitive provider pricing.
+- `fivecentsub.media` builds the one canonical FFmpeg command for local non-ML audio preparation. `prepare-audio --dry-run` never invokes FFmpeg.
 - Keep the implementation cloud-only with no local ML or GPU inference. Local non-ML media preparation, such as FFmpeg audio extraction, is permitted before cloud requests.
 
 ## Reuse and publishing boundary
