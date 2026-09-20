@@ -11,26 +11,37 @@ from .estimation import RateCard, UsageEstimate, estimate_cost
 from .media import build_audio_extraction_command, prepare_audio
 from .pipeline import SubtitlePipeline
 from .providers import MockTranscriptProvider, MockTranslationProvider
-from .srt import parse_srt
+from .ass import parse_ass
 
 
-_JAPANESE_SRT = """1
-00:00:00,000 --> 00:00:02,000
-こんにちは。
+_ASS_HEADER = """[Script Info]
+Title: 5centSUB mock subtitles
+ScriptType: v4.00+
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
 
-2
-00:00:02,500 --> 00:00:04,500
-今日はいい天気ですね。
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,20,&H00FFFFFF,&H000019FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
-_KOREAN_SRT = """1
-00:00:00,000 --> 00:00:02,000
-안녕하세요.
-
-2
-00:00:02,500 --> 00:00:04,500
-오늘 날씨가 좋네요.
+_JAPANESE_ASS = (
+    _ASS_HEADER
+    + """Dialogue: 0,0:00:00.00,0:00:02.00,Default,,0,0,0,,こんにちは。
+Dialogue: 0,0:00:02.50,0:00:04.50,Default,,0,0,0,,今日はいい天気ですね。
 """
+)
+
+_KOREAN_ASS = (
+    _ASS_HEADER
+    + """Dialogue: 0,0:00:00.00,0:00:02.00,Default,,0,0,0,,안녕하세요.
+Dialogue: 0,0:00:02.50,0:00:04.50,Default,,0,0,0,,오늘 날씨가 좋네요.
+"""
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -40,7 +51,7 @@ def build_parser() -> argparse.ArgumentParser:
     demo = subcommands.add_parser("demo", help="run an offline mock subtitle job")
     demo.add_argument("--budget-usd", type=Decimal, default=Decimal("0.05"))
 
-    validate = subcommands.add_parser("validate-srt", help="validate an SRT file")
+    validate = subcommands.add_parser("validate-ass", help="validate an ASS file")
     validate.add_argument("path", type=Path)
 
     estimate = subcommands.add_parser("estimate", help="estimate a cloud job from measured usage")
@@ -65,8 +76,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.command == "validate-srt":
-        cues = parse_srt(args.path.read_text(encoding="utf-8-sig"))
+    if args.command == "validate-ass":
+        cues = parse_ass(args.path.read_text(encoding="utf-8-sig"))
         print(json.dumps({"valid": True, "cues": len(cues)}, ensure_ascii=False))
         return 0
     if args.command == "estimate":
@@ -114,8 +125,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     pipeline = SubtitlePipeline(
-        MockTranscriptProvider(_JAPANESE_SRT),
-        MockTranslationProvider(_KOREAN_SRT),
+        MockTranscriptProvider(_JAPANESE_ASS),
+        MockTranslationProvider(_KOREAN_ASS),
     )
     result = pipeline.run("mock://authorized-sample", BudgetLedger(args.budget_usd))
     print(
@@ -125,7 +136,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "stage_history": [stage.value for stage in result.stage_history],
                 "actual_cost_usd": result.actual_cost_usd,
                 "failure_reason": result.failure_reason,
-                "korean_srt": result.korean_srt,
+                "korean_ass": result.korean_ass,
             },
             ensure_ascii=False,
         )
