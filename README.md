@@ -23,3 +23,5 @@ that:
 
 See [the project foundation plan](docs/PROJECT_FOUNDATION.ko.md) for the
 delivery order, reuse policy, and open decisions.
+The current provider comparison is in
+[the provider research note](docs/PROVIDER_RESEARCH.ko.md).

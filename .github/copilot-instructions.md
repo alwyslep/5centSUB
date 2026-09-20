@@ -31,6 +31,8 @@ not require credentials or make HTTP requests.
 
 - `README.md` defines the externally visible purpose and present scope.
 - `docs/PROJECT_FOUNDATION.ko.md` is the decision log and phased delivery plan. Update it when a provider, cost formula, or processing boundary is selected.
+- `docs/PROVIDER_RESEARCH.ko.md` records time-sensitive provider pricing and policy evidence. Reconfirm every cited rate and policy before implementing a concrete provider.
+
 
 <!-- graft:start -->
 ## Graft — repo context graph
