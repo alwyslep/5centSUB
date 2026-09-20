@@ -1,6 +1,7 @@
 # 클라우드 공급자 조사
 
 조사일: 2026-09-20  
+재확인일: 2026-09-21 (아래 결론·단가·약관의 유효성을 공식 문서에서 다시 대조, 결론 변동 없음)  
 상태: **공급자 미확정**
 
 ## 결론
@@ -13,7 +14,7 @@
 | --- | ---: | ---: | --- |
 | Groq `whisper-large-v3-turbo` | $0.04/시간 | $0.16 | 상한의 3.2배 |
 | OpenAI `gpt-4o-mini-transcribe` | $0.003/분 | $0.72 | 상한의 14.4배 |
-| Google Gemini 전용 Transcribe | 약 $0.005/분 | 약 $1.20 | 상한의 24배 |
+| Google Gemini 전용 Transcribe (`gemini-3.5-transcribe`) | 입력 $0.003/분, 혼합 약 $0.005/분 | 약 $1.20 | 상한의 24배 |
 
 따라서 이 프로젝트는 원본 길이가 아니라 실제로 클라우드에 보내는 음성 길이,
 모델 입출력 토큰, 번역 출력 토큰, 재시도 비용을 합산한 뒤 요청을 허용해야 한다.
@@ -22,13 +23,22 @@
 ## Gemini Batch 후보
 
 Gemini Batch API는 대량 비동기 요청을 표준 상호작용 API 비용의 50%로 처리하며,
-목표 완료 시간은 24시간이다. 이 방식은 저지연 서비스가 아니라 장시간 오프라인
-배치 처리 후보로만 적합하다.
+목표 완료 시간은 24시간이다(2026-09-21 재확인, 변동 없음). 이 방식은 저지연
+서비스가 아니라 장시간 오프라인 배치 처리 후보로만 적합하다.
 
 일반 Gemini 모델의 오디오 입력·텍스트 출력 가격은 모델별·시점별로 변한다. 음성
 구간 축소 후의 실제 입력 오디오 토큰과 전사·번역 출력 토큰이 아직 없으므로,
 현재 5센트 달성 가능성을 숫자로 주장하지 않는다. 짧은 권리 확보 샘플로 실제
 사용량을 측정한 뒤에만 견적식을 고정한다.
+
+## Groq STT 제약 (2026-09-21 재확인)
+
+- `whisper-large-v3-turbo`는 전사 전용이며 번역은 지원하지 않는다. 번역은 별도
+  공급자로 분리해야 한다.
+- 파일 크기 상한은 무료 등급 25MB, 개발 등급 100MB이다. 이를 넘는 입력은 분할
+  또는 URL 전달이 필요하며, 분할 방식은 원본 시간축 역매핑과 함께 검증한다.
+- `verbose_json` 응답 형식에서 segment·word 단위 타임스탬프를 제공한다. ASS
+  시간축 검증의 입력 근거로 사용할 수 있다.
 
 ## 과거 실험 수치의 해석
 
@@ -84,9 +94,9 @@ $0.25/M·$0.50/M의 서로 다른 단가를 적용한다. 따라서 이 보고�
 
 ## 공식 근거
 
-- [Google Gemini API 가격](https://ai.google.dev/gemini-api/docs/pricing) — 2026-09-20 확인
-- [Google Gemini Batch API](https://ai.google.dev/gemini-api/docs/batch-api) — 표준가의 50%, 목표 완료 24시간
-- [Google Gemini API 추가 약관](https://ai.google.dev/gemini-api/terms) — 2026-03-23 발효본 확인
-- [Groq 지원 모델·가격](https://console.groq.com/docs/models) — 2026-09-20 확인
-- [Groq Speech to Text](https://console.groq.com/docs/speech-to-text) — 파일 크기·타임스탬프 제약 확인
-- [OpenAI API 가격](https://platform.openai.com/docs/pricing) — 2026-09-20 확인
+- [Google Gemini API 가격](https://ai.google.dev/gemini-api/docs/pricing) — 2026-09-21 재확인. 전용 Transcribe 모델(`gemini-3.5-transcribe`) 입력 $0.003/분, 혼합 약 $0.005/분
+- [Google Gemini Batch API](https://ai.google.dev/gemini-api/docs/batch-api) — 2026-09-21 재확인. 표준가의 50%, 목표 완료 24시간, 변동 없음
+- [Google Gemini API 추가 약관](https://ai.google.dev/gemini-api/terms) — 2026-09-21 재확인. 발효일 2026-03-23 유지(페이지 최종 갱신 2026-04-28, 조사일 이전이므로 변동 없음)
+- [Groq 지원 모델·가격](https://console.groq.com/docs/models) — 2026-09-21 재확인. `whisper-large-v3-turbo` $0.04/시간 유지
+- [Groq Speech to Text](https://console.groq.com/docs/speech-to-text) — 2026-09-21 재확인. 전사 전용, 파일 상한(무료 25MB·개발 100MB), segment·word 타임스탬프
+- [OpenAI API 가격](https://developers.openai.com/api/docs/pricing) — 2026-09-21 재확인. `gpt-4o-mini-transcribe` $0.003/분 유지. 가격표가 기존 `platform.openai.com`에서 `developers.openai.com`으로 이전됐으므로 링크를 갱신한다
