@@ -4,8 +4,16 @@
 video while keeping the cloud-service cost for a four-hour input at or below
 US$0.05.
 
-The project is in its foundation phase. It has no executable application yet.
-The first deliverable will be a small, repeatable end-to-end proof that:
+The current offline proof uses deterministic mock providers. It validates the
+cost guard, pipeline stages, and SRT output without credentials or HTTP calls.
+
+```powershell
+python -m pytest
+python -m fivecentsub demo
+```
+
+The first cloud-backed deliverable will be a small, repeatable end-to-end proof
+that:
 
 1. accepts a short authorized media sample,
 2. creates a Japanese transcript,

@@ -1,10 +1,23 @@
 # Copilot Instructions
 
-## Current project state
+## Commands
 
-- The repository currently contains project artwork and foundation documentation, but no application source, dependency manifest, CI workflow, or runtime tooling.
-- No project-specific build, test, lint, formatting, or single-test commands have been established.
-- The first implementation is a small, end-to-end proof: authorized Japanese-language media input through Japanese transcription, Korean translation, SRT output, and per-job cost reporting.
+```powershell
+python -m pytest
+python -m pytest tests/test_pipeline.py::test_mock_pipeline_produces_valid_korean_srt
+python -m fivecentsub demo
+python -m fivecentsub validate-srt path\to\subtitle.srt
+```
+
+`demo` is intentionally offline: it uses deterministic mock providers and must
+not require credentials or make HTTP requests.
+
+## Architecture and conventions
+
+- `fivecentsub.pipeline` owns stage transitions and coordinates transcript and translation providers.
+- Providers implement small protocol interfaces. Concrete cloud clients will be added behind those interfaces; tests use `MockTranscriptProvider` and `MockTranslationProvider`.
+- All provider estimates must be authorized by `BudgetLedger` before a request begins. Actual charges are recorded separately; a charge over the budget changes the job to `FAILED`.
+- `fivecentsub.srt` is the single strict SRT parser. It rejects malformed timestamps, empty cue text, non-sequential cue numbers, non-positive durations, and overlaps.
 - Keep the implementation cloud-only with no local ML or GPU inference. Local non-ML media preparation, such as FFmpeg audio extraction, is permitted before cloud requests.
 
 ## Reuse and publishing boundary
