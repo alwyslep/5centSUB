@@ -5,7 +5,7 @@
 - The repository currently contains project artwork and foundation documentation, but no application source, dependency manifest, CI workflow, or runtime tooling.
 - No project-specific build, test, lint, formatting, or single-test commands have been established.
 - The first implementation is a small, end-to-end proof: authorized Japanese-language media input through Japanese transcription, Korean translation, SRT output, and per-job cost reporting.
-- Keep the implementation cloud-only with no local ML inference. Do not decide whether local non-ML media preparation is permitted until the project decision recorded in `docs/PROJECT_FOUNDATION.ko.md` is resolved.
+- Keep the implementation cloud-only with no local ML or GPU inference. Local non-ML media preparation, such as FFmpeg audio extraction, is permitted before cloud requests.
 
 ## Reuse and publishing boundary
 
