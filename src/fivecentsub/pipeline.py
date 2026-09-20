@@ -5,7 +5,7 @@ from enum import Enum
 
 from .budget import BudgetExceededError, BudgetLedger
 from .providers import TranscriptProvider, TranslationProvider
-from .srt import parse_srt
+from .ass import parse_ass
 
 
 class JobStage(str, Enum):
@@ -20,7 +20,7 @@ class JobStage(str, Enum):
 class JobResult:
     stage: JobStage
     stage_history: tuple[JobStage, ...]
-    korean_srt: str | None
+    korean_ass: str | None
     actual_cost_usd: str
     failure_reason: str | None = None
 
@@ -38,12 +38,12 @@ class SubtitlePipeline:
 
             stage_history.append(JobStage.TRANSCRIBING)
             transcript = self.transcript_provider.transcribe(media_reference)
-            parse_srt(transcript.subtitle_srt)
+            parse_ass(transcript.subtitle_ass)
             ledger.record_charge(transcript.actual_cost_usd)
 
             stage_history.append(JobStage.TRANSLATING)
-            translation = self.translation_provider.translate(transcript.subtitle_srt)
-            parse_srt(translation.subtitle_srt)
+            translation = self.translation_provider.translate(transcript.subtitle_ass)
+            parse_ass(translation.subtitle_ass)
             ledger.record_charge(translation.actual_cost_usd)
         except (BudgetExceededError, ValueError) as exc:
             stage_history.append(JobStage.FAILED)
@@ -58,6 +58,6 @@ class SubtitlePipeline:
         return JobResult(
             JobStage.COMPLETED,
             tuple(stage_history),
-            translation.subtitle_srt,
+            translation.subtitle_ass,
             f"{ledger.actual_usd:.6f}",
         )

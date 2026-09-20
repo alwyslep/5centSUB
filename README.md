@@ -5,7 +5,7 @@ video while keeping the cloud-service cost for a four-hour input at or below
 US$0.05.
 
 The current offline proof uses deterministic mock providers. It validates the
-cost guard, pipeline stages, and SRT output without credentials or HTTP calls.
+cost guard, pipeline stages, and ASS output without credentials or HTTP calls.
 
 ```powershell
 python -m pytest
@@ -19,7 +19,7 @@ that:
 1. accepts a short authorized media sample,
 2. creates a Japanese transcript,
 3. translates it to Korean,
-4. writes a valid SRT file, and
+4. writes a valid ASS file, and
 5. records actual cloud usage and cost.
 
 See [the project foundation plan](docs/PROJECT_FOUNDATION.ko.md) for the

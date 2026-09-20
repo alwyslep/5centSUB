@@ -13,11 +13,16 @@ def test_demo_is_offline_and_reports_completed_job(capsys) -> None:
     assert result["actual_cost_usd"] == "0.017000"
 
 
-def test_validate_srt_reports_cue_count(tmp_path, capsys) -> None:
-    path = tmp_path / "valid.srt"
-    path.write_text("1\n00:00:00,000 --> 00:00:01,000\n테스트\n", encoding="utf-8")
+def test_validate_ass_reports_cue_count(tmp_path, capsys) -> None:
+    path = tmp_path / "valid.ass"
+    path.write_text(
+        "[Events]\n"
+        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+        "Dialogue: 0,0:00:00.00,0:00:01.00,Default,,0,0,0,,테스트\n",
+        encoding="utf-8",
+    )
 
-    assert main(["validate-srt", str(path)]) == 0
+    assert main(["validate-ass", str(path)]) == 0
 
     assert json.loads(capsys.readouterr().out) == {"valid": True, "cues": 1}
 
